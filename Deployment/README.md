@@ -103,7 +103,7 @@ Stage:       $default
 
 Sent a `POST /contact` request through API Gateway and received a successful response from the deployed application.
 
-
+### json
 
 {
   "name": "Darshan",
