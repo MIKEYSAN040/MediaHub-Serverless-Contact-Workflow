@@ -1,23 +1,22 @@
-
-# Incident 04 – Missing Lambda Environment Variable
+# Incident 05 – Invalid Request Payload Handling
 
 ## Incident Summary
 
-A controlled environment variable failure was introduced by changing the valid DynamoDB table name in the Lambda environment variables to an invalid table name.
+A controlled invalid request scenario was introduced by sending an incomplete contact form payload that was missing the required `message` field.
 
-The contact API then failed because Lambda could not access the configured DynamoDB resource.
+The Lambda function initially attempted to access the missing field directly, causing an unhandled error and an HTTP 500 response.
 
 ---
 
-## 1. Incident Introduced – Environment Variable Failure
+## 1. Incident Introduced – Invalid Payload
 
-The `TABLE_NAME` environment variable was intentionally changed to an invalid DynamoDB table name and the API was tested through Postman.
+An incomplete JSON payload was intentionally submitted through Postman without the required `message` field.
 
-![Environment Variable Failure – Postman](01-Environment-Variable-Failure-Postman.png)
+![Invalid Payload – Postman](01-Invalid-Payload-Postman.png)
 
 **Observed Impact**
 
-> The contact API returned HTTP 500 after the database configuration was invalidated, demonstrating the customer-facing impact of the environment variable failure.
+> The API failed when an incomplete customer request was submitted, exposing a missing input-validation scenario.
 
 ---
 
@@ -25,67 +24,67 @@ The `TABLE_NAME` environment variable was intentionally changed to an invalid Dy
 
 CloudWatch Logs were reviewed to identify the Lambda execution failure.
 
-The logs showed a DynamoDB resource error, confirming that the configured table name was invalid.
+The logs showed a missing request field error, confirming that the Lambda function did not validate incomplete payloads before processing them.
 
-![Environment Variable Error](02-Environment-Variable-Error.png)
+![Invalid Payload – CloudWatch](02-Invalid-Payload-CloudWatch.png)
 
 ### Root Cause
 
-The Lambda function was configured with an invalid `TABLE_NAME`, preventing it from accessing the required DynamoDB table.
+The Lambda function directly accessed required fields from the request body without validating whether those fields were present.
 
 ---
 
 ## 3. Resolution
 
-The invalid `TABLE_NAME` was replaced with the correct value for the `MediaHub-Contacts` DynamoDB table.
+Input validation was added to check whether `name`, `email`, and `message` were provided before processing the request.
 
-![Environment Variable Restored](03-Environment-Variable-Restored.png)
+![Payload Validation Fix](03-Payload-Validation-Fix.png)
 
 **Resolution**
 
-> Restored the correct DynamoDB table configuration in the Lambda environment, resolving the application configuration failure.
+> Added input validation to handle incomplete customer requests gracefully instead of allowing invalid payloads to cause an unhandled Lambda failure.
 
 ---
 
 ## 4. API Recovery
 
-The API was tested again after restoring the correct environment variable.
+The API was tested again after implementing input validation.
 
-The contact request was successfully processed and returned HTTP 200.
+The incomplete payload was handled with a controlled response, and a valid contact request was successfully processed.
 
 ![API Recovered](04-API-Recovered.png)
 
 **Recovery Result**
 
-> The API successfully processed the contact request after restoring the correct environment variable, confirming recovery from the configuration failure.
+> The API correctly rejected the incomplete payload and successfully processed a valid request after input validation was implemented.
 
 ---
 
 ## 5. Final DynamoDB Validation
 
-The DynamoDB table was checked to confirm that the recovered contact submission was successfully stored.
+The DynamoDB table was checked to confirm that the valid contact submission was successfully stored after the validation fix.
 
 ![DynamoDB Recovery Validation](05-DynamoDB-Recovery-Validation.png)
 
 **Final Validation**
 
-> Verified successful backend processing by confirming that the recovered contact submission was stored in DynamoDB.
+> Verified successful backend processing by confirming that the valid contact submission was stored in DynamoDB after input validation was implemented.
 
 ---
 
 ## Troubleshooting Workflow
 
-**Identify API Failure -> Review CloudWatch Logs -> Identify Environment Variable Error -> Restore Correct Configuration -> Retest API -> Validate DynamoDB Record**
+**Identify API Failure -> Review CloudWatch Logs -> Identify Missing Request Field -> Implement Input Validation -> Retest API -> Validate DynamoDB Record**
 
 ---
 
 ## Skills Demonstrated
 
 - AWS Lambda
+- Amazon API Gateway
 - Amazon DynamoDB
-- API Gateway
-- CloudWatch Logs
-- Environment Variable Configuration
+- Amazon CloudWatch Logs
+- Request Validation
 - Serverless Troubleshooting
 - Root Cause Analysis
 - Incident Resolution
@@ -95,4 +94,4 @@ The DynamoDB table was checked to confirm that the recovered contact submission 
 
 ## Key Takeaway
 
-This incident demonstrates the ability to troubleshoot a serverless configuration failure by tracing an API error through Lambda and CloudWatch Logs, identifying an incorrect environment variable, restoring the correct configuration, and validating successful backend processing.
+This incident demonstrates the ability to troubleshoot an API failure caused by invalid customer input, analyze Lambda errors through CloudWatch Logs, implement input validation, and validate successful backend processing after remediation.
