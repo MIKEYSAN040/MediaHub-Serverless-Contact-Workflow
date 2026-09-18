@@ -168,7 +168,7 @@ After validating the healthy deployment, controlled incidents are introduced to 
 Each incident follows a structured troubleshooting approach:
 
 
-See the `incidents/` directory for detailed incident reports.
+See the `troubleshootings/` directory for detailed incident reports.
 
 ---
 
